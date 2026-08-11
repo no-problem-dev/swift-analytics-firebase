@@ -2,12 +2,15 @@ import AnalyticsCore
 import FirebaseAnalytics
 import Foundation
 
-/// ``AnalyticsCore/AnalyticsClient`` の Firebase Analytics 実装。
+/// Sends measurement to Firebase Analytics, refusing anything GA4 would silently discard.
 ///
-/// **vendor を知っているのはこの型だけ。** 送信は fire-and-forget で、SDK 側がバッチと再送を
-/// 持っているので、こちらでリトライもエラー処理もしない（計測のためにアプリを止めない）。
+/// **This is the only type that knows which vendor is behind the measurement.** Sending is
+/// fire-and-forget: the call hands the payload to the Firebase SDK and returns straight away.
+/// The SDK batches events and uploads them on its own schedule, so a returning call is not a
+/// delivered event, and there is no completion, no result and no way to confirm delivery from
+/// here. Nothing retries and nothing reports errors — measurement must not hold up the app.
 ///
-/// ## 使い方
+/// ## Usage
 ///
 /// ```swift
 /// FirebaseApp.configure()
@@ -22,17 +25,26 @@ import Foundation
 /// #endif
 /// ```
 ///
-/// ## 送る前に確かめていること
+/// ## What is checked before sending
 ///
-/// GA4 の制約を破った送信は**成功したように見えて捨てられる**（ダッシュボードに出ないことでしか
-/// 気づけない）。名前と値の検査は ``GA4Dialect`` が持っていて、開発中は破った時点で分かるようにする。
+/// A payload that breaks a GA4 limit **looks like it was sent and is then discarded**, and the
+/// only symptom is a number missing from the dashboard. ``GA4Dialect`` holds the name and value
+/// rules; a payload that breaks one is never handed to Firebase, and the mistake is made loud
+/// during development rather than found weeks later on the dashboard.
+///
+/// ## What counts as one event
+///
+/// One call to ``track(_:)`` is one Firebase event. This client keeps no history and suppresses
+/// nothing of its own, so "once per session" and "once per install" only mean anything when
+/// ``AnalyticsCore/DedupingAnalytics`` wraps it.
 public struct FirebaseAnalyticsClient: AnalyticsClient {
 
     private let onViolation: @Sendable (GA4Dialect.Violation) -> Void
 
-    /// - Parameter onViolation: GA4 の制約を破った送信を見つけたときの扱い。
-    ///   既定は **DEBUG では停止、RELEASE では送らずに握る**。
-    ///   出荷後に計測のために落とすことはしないが、開発中は気づけないと意味が無い。
+    /// - Parameter onViolation: What to do about a payload GA4 would discard. It is dropped either
+    ///   way; this only decides whether anyone hears about it. The default **stops the process in
+    ///   debug builds and stays silent in release** — a shipped app must never die over
+    ///   measurement, and a violation nobody notices during development is worth nothing.
     public init(onViolation: @escaping @Sendable (GA4Dialect.Violation) -> Void = Self.crashInDebug) {
         self.onViolation = onViolation
     }
@@ -53,20 +65,23 @@ public struct FirebaseAnalyticsClient: AnalyticsClient {
         FirebaseAnalytics.Analytics.setUserProperty(property.value, forName: property.name)
     }
 
-    /// 既定の扱い。DEBUG では止め、RELEASE では送らずに見送る。
+    /// Default handling: stop the process in debug builds, let it pass in silence in release.
     ///
-    /// **握りつぶしではない。** 送っても捨てられる値なので送らないだけで、
-    /// 開発中は必ず止まるので、出荷までに気づける経路が残っている。
+    /// **The silence is not swallowing the problem.** GA4 would have discarded the payload anyway,
+    /// so not sending it loses nothing, and the debug trap means every violation is met head-on
+    /// long before the build that ships.
     public static let crashInDebug: @Sendable (GA4Dialect.Violation) -> Void = { violation in
         #if DEBUG
         preconditionFailure("GA4 の制約に反する計測: \(violation.localizedDescription)")
         #endif
     }
 
-    /// ``AnalyticsCore/AnalyticsValue`` を GA4 が受け取れる形に落とす。
+    /// Converts parameter values into the two kinds Firebase carries: strings and numbers.
     ///
-    /// 真偽は `0` / `1` の数値にする —— GA4 では真偽をそのまま送るより数値のほうが集計しやすく、
-    /// 文字列の `"true"` は値の集合が増えるだけで何も得しない。
+    /// Every case of ``AnalyticsCore/AnalyticsValue`` has a representation here, so nothing is
+    /// lost in the crossing. Only booleans change shape: they go as `0` and `1` rather than as
+    /// `"true"` and `"false"`, because GA4 can sum and average a number, while the two strings
+    /// would only add values to a dimension and buy nothing.
     static func encode(_ parameters: [String: AnalyticsValue]) -> [String: Any] {
         parameters.mapValues { value in
             switch value {

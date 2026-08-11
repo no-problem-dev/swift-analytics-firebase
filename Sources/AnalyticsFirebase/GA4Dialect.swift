@@ -1,37 +1,53 @@
 import AnalyticsCore
 import Foundation
 
-/// GA4（Firebase Analytics）が受け取れる形かどうかの検査。
+/// Checks whether an event or user property is in a shape GA4 will actually accept.
 ///
-/// GA4 は制約を破った送信を**黙って捨てる**。SDK は成功を返し、アプリからは何も起きていない
-/// ように見えるので、ダッシュボードに数字が出ないことでしか気づけない。しかも
-/// 「まだ誰も使っていない」と読めてしまうので、気づかないまま出荷される。
+/// GA4 discards a payload that breaks its limits **without reporting an error**. The SDK call
+/// succeeds, nothing surfaces in the app, and the only symptom is a number that never appears on
+/// the dashboard — which reads as "nobody has used this yet", so it ships unnoticed.
 ///
-/// だから送る前に確かめる。制約は Firebase の公開仕様に基づく。
+/// So the shape is checked before anything is handed to Firebase, against its published limits:
+///
+/// | Rule | Limit |
+/// |---|---|
+/// | Name length — event, parameter and user property names alike | 40 characters |
+/// | Characters allowed in a name | ASCII letters, digits and `_`, first character a letter |
+/// | Reserved prefixes, refused on every kind of name | `firebase_`, `google_`, `ga_` |
+/// | Firebase's own event names, refused as event names only | ``reservedNames`` |
+/// | Parameters on one event | 25 |
+/// | String value length | 100 characters |
+///
+/// Only string values are measured; numbers are not.
+///
+/// **Nothing is truncated or rewritten here.** Validation reports the first rule broken and stops,
+/// and ``FirebaseAnalyticsClient`` drops the whole event or property rather than send a partial
+/// one. GA4 caps user property names and values more tightly than it caps event parameters, so a
+/// long property can clear this check and still not survive on Google's side.
 public enum GA4Dialect {
 
-    /// 破った制約。
+    /// A GA4 rule an event or user property breaks, carrying the name at fault and what was measured.
     public enum Violation: Error, Sendable, Equatable, LocalizedError {
 
-        /// 名前が長すぎる（イベント名・パラメータ名とも 40 文字まで）。
+        /// A name is longer than 40 characters — the same limit for events, parameters and properties.
         case nameTooLong(String, limit: Int)
 
-        /// 名前に使えない文字が入っている（英数字と `_` のみ）。
+        /// A name contains something other than ASCII letters, digits and `_`.
         case nameHasInvalidCharacters(String)
 
-        /// 名前が英字で始まっていない。
+        /// A name is empty, or starts with anything but an ASCII letter — a digit, `_`, or Japanese.
         case nameDoesNotStartWithLetter(String)
 
-        /// Firebase が予約している接頭辞（`firebase_` / `google_` / `ga_`）。
+        /// A name begins with a prefix Firebase keeps for itself. Carries the prefix, not the name.
         case reservedPrefix(String)
 
-        /// Firebase が予約しているイベント名。
+        /// An event name collides with one Firebase logs on its own. Parameter names are exempt.
         case reservedName(String)
 
-        /// パラメータが多すぎる（1 イベントにつき 25 個まで）。
+        /// An event carries more than the 25 parameters GA4 accepts.
         case tooManyParameters(String, count: Int)
 
-        /// 文字列の値が長すぎる（100 文字まで）。
+        /// A string value is longer than 100 characters. Numbers are never measured.
         case valueTooLong(key: String, length: Int)
 
         public var errorDescription: String? {
@@ -54,17 +70,19 @@ public enum GA4Dialect {
         }
     }
 
-    /// イベント名の上限。
+    /// Longest name GA4 accepts, in characters. Applies to events, parameters and user properties.
     public static let nameLimit = 40
-    /// 1 イベントに載せられるパラメータの数。
+    /// Most parameters GA4 will carry on one event. An event with more is refused whole, not trimmed.
     public static let parameterLimit = 25
-    /// 文字列の値の上限。
+    /// Longest string value GA4 accepts, in characters. Numeric values are not measured against it.
     public static let valueLimit = 100
 
-    /// 使えない接頭辞。
+    /// Prefixes Firebase keeps for itself, refused on event, parameter and user property names alike.
     public static let reservedPrefixes = ["firebase_", "google_", "ga_"]
 
-    /// 予約されているイベント名。カスタムイベントに使うと捨てられる。
+    /// Event names Firebase logs on its own; reusing one for a custom event means it is discarded.
+    ///
+    /// These stay usable as parameter and user property names — only the event name is refused.
     public static let reservedNames: Set<String> = [
         "ad_activeview", "ad_click", "ad_exposure", "ad_impression", "ad_query", "ad_reward",
         "adunit_exposure", "app_background", "app_clear_data", "app_exception", "app_remove",
@@ -76,7 +94,11 @@ public enum GA4Dialect {
         "session_start", "session_start_with_rollout", "user_engagement"
     ]
 
-    /// 送れる形かどうか。問題があれば最初の 1 つを返す。
+    /// Returns the first GA4 rule the event breaks, or nothing when it is safe to send.
+    ///
+    /// Checked in that order: the event name, then how many parameters there are, then each
+    /// parameter's name and — for string values only — its length. Checking stops at the first
+    /// failure, so an event with several problems surfaces them one at a time.
     public static func validate(_ event: any AnalyticsEvent) -> Violation? {
         if let violation = validateName(event.name, allowReservedNames: false) {
             return violation
@@ -95,7 +117,10 @@ public enum GA4Dialect {
         return nil
     }
 
-    /// 属性が送れる形かどうか。
+    /// Returns the first GA4 rule the user property breaks, or nothing when it is safe to send.
+    ///
+    /// The name is held to the same limits as a parameter name, so Firebase's reserved event names
+    /// pass — a property called `error` is fine — while the reserved prefixes are still refused.
     public static func validate(_ property: any AnalyticsUserProperty) -> Violation? {
         if let violation = validateName(property.name, allowReservedNames: true) {
             return violation

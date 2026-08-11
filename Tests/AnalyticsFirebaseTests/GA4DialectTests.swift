@@ -2,7 +2,7 @@ import AnalyticsCore
 import Testing
 @testable import AnalyticsFirebase
 
-/// GA4 が黙って捨てる形を、送る前に落とせること。
+/// Shapes GA4 would discard without saying so are caught before anything is sent.
 @Suite("GA4 の制約")
 struct GA4DialectTests {
 
@@ -26,7 +26,7 @@ struct GA4DialectTests {
     @Test("英数字と _ 以外は落ちる")
     func rejectsInvalidCharacters() {
         #expect(GA4Dialect.validate(Event(name: "paywall-shown")) == .nameHasInvalidCharacters("paywall-shown"))
-        // 日本語の名前は通らない。**送信は成功して見えるので、ここで止めないと気づけない**
+        // A Japanese name is refused. **The send would look successful, so nothing catches it later**
         #expect(GA4Dialect.validate(Event(name: "ペイウォール")) != nil)
     }
 
@@ -88,7 +88,7 @@ struct GA4EncodingTests {
     }
 }
 
-// MARK: - テスト用の最小の準拠
+// MARK: - Minimal conformances for the tests
 
 private struct Event: AnalyticsEvent {
     let name: String
