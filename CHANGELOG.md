@@ -3,20 +3,20 @@
 ## [Unreleased]
 
 
-Keep a Changelog 形式。バージョンはタグと一致させる。
+Keep a Changelog format. Versions match their tags.
 
 ## [0.1.0] - 2026-08-09
 
-最初の公開。
+First public release.
 
-### 入っているもの
+### What's included
 
-- `FirebaseAnalyticsClient` — `swift-analytics` の `AnalyticsClient` を Firebase Analytics で実装する
-- `GA4Dialect` — **送る前に** GA4 の制約（名前・予約語・パラメータ数・値長）を検査する。
-  GA4 は違反を黙って捨てるので、出ないことでしか気づけない。
-  既定は DEBUG で停止・RELEASE では送らずに見送る
+- `FirebaseAnalyticsClient` — implements `swift-analytics`'s `AnalyticsClient` on Firebase Analytics
+- `GA4Dialect` — checks GA4's constraints (name, reserved words, parameter count, value length)
+  **before sending**. GA4 discards violations silently, so the only way you notice is that nothing shows up.
+  The default is to halt in DEBUG, and in RELEASE to let it go without sending
 
-### 決めていること
+### Decisions
 
-- SPM プロダクトは `FirebaseAnalytics` のみ。**`FirebaseAnalyticsIdentitySupport` を足さないことが仕様**
-  （firebase-ios-sdk 12.x では、足したときだけ IDFA を集める）
+- The only SPM product is `FirebaseAnalytics`. **Not adding `FirebaseAnalyticsIdentitySupport` is the specification**
+  (in firebase-ios-sdk 12.x, IDFA is collected only when it is added)
