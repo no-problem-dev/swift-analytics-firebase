@@ -2,6 +2,19 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- The DocC site is published again. It had never built: the Swift-DocC plugin extracts symbols with
+  `swift-symbolgraph-extract`, and SwiftPM omits the framework search path for binary xcframework
+  dependencies from that command, so `FirebaseAnalytics` — a framework module, which Clang finds
+  only through `-F` — could not be loaded. The workflow now takes the symbol graph from the
+  compiler, where the search paths are already correct, and runs `docc` directly. The graph is
+  identical to the extractor's once `-F` is supplied by hand.
+
+### Changed
+
+- `FirebaseAnalyticsClient`'s documentation refers to `DedupingAnalytics` as plain code rather than
+  a symbol link. It lives in another module, so the link never resolved.
 
 Keep a Changelog format. Versions match their tags.
 

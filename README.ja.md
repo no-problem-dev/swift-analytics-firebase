@@ -71,13 +71,11 @@ FirebaseAnalyticsClient(onViolation: { violation in
 
 ## ドキュメント
 
+このパッケージの API リファレンスは
+[**swift-analytics-firebase**](https://no-problem-dev.github.io/swift-analytics-firebase/documentation/analyticsfirebase) にあります。
+
 このパッケージが実装している語彙（出来事・値・種別・数え方）の文書は
 [**swift-analytics**](https://no-problem-dev.github.io/swift-analytics/documentation/) にあります。
-
-このリポジトリ自身は DocC サイトを公開していません。Firebase Analytics は xcframework で配られ、
-macOS 向けのモジュールが symbolgraph 抽出に必要な形で出てこないため、`swift-symbolgraph-extract` が
-`AnalyticsFirebase` を読めません。公開面は 2 つの型だけで、どちらもソースの doc コメントが説明します。
-[CONSISTENCY.md](CONSISTENCY.md) を参照してください。
 
 ## 導入
 

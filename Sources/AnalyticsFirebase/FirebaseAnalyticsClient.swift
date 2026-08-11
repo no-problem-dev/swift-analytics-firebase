@@ -36,7 +36,7 @@ import Foundation
 ///
 /// One call to ``track(_:)`` is one Firebase event. This client keeps no history and suppresses
 /// nothing of its own, so "once per session" and "once per install" only mean anything when
-/// ``AnalyticsCore/DedupingAnalytics`` wraps it.
+/// `DedupingAnalytics` from swift-analytics wraps it.
 public struct FirebaseAnalyticsClient: AnalyticsClient {
 
     private let onViolation: @Sendable (GA4Dialect.Violation) -> Void

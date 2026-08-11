@@ -29,12 +29,42 @@ jobs:
         with:
           xcode-version: '26.0.1'
 
+      # The Swift-DocC plugin cannot document this package, so the symbol graph comes from the
+      # compiler instead of from the plugin's extractor.
+      #
+      # The plugin extracts symbols by running `swift-symbolgraph-extract`, and SwiftPM builds
+      # that invocation without a framework search path for binary xcframework dependencies.
+      # FirebaseAnalytics arrives as `FirebaseAnalytics.xcframework`, and its slice directory is
+      # handed over as `-I .../FirebaseAnalytics.xcframework/macos-arm64_x86_64`. But the module
+      # inside it is declared `framework module FirebaseAnalytics`, and Clang finds framework
+      # modules only through `-F`. So extraction fails with "missing required module
+      # 'FirebaseAnalytics'" on a package that compiles: the compile step does get `-F`, pointing
+      # at the build directory SwiftPM copies the frameworks into. The gap cannot be closed from
+      # outside — neither `-Xswiftc`, `-Xcc`, nor the target's swiftSettings reach that command.
+      #
+      # `-emit-symbol-graph` runs inside the build, where the search paths are already correct.
+      # The graph it writes is the same one the extractor produces once `-F` is added by hand
+      # (verified 2026-08-11: 27 public symbols, 33 relationships, identical precise identifiers).
       - name: Generate Documentation
         run: |
-          swift package --allow-writing-to-directory ./docs \
-            generate-documentation \
-            --target AnalyticsFirebase \
-            --disable-indexing \
+          set -euo pipefail
+          # A scratch path of its own, because the graphs are written as a side effect of
+          # compiling. A build that is already up to date writes nothing, so sharing .build with
+          # an earlier `swift build` would silently produce no symbol graphs at all.
+          rm -rf .build/docc ./docs
+          mkdir -p .build/docc/symbol-graphs .build/docc/module-symbol-graphs
+          swift build --scratch-path .build/docc --target AnalyticsFirebase \
+            -Xswiftc -emit-symbol-graph \
+            -Xswiftc -emit-symbol-graph-dir -Xswiftc "$PWD/.build/docc/symbol-graphs"
+          # Only this module's graphs. The build emits one per module it compiles, and the
+          # dependencies document themselves in their own repositories.
+          cp .build/docc/symbol-graphs/AnalyticsFirebase.symbols.json .build/docc/module-symbol-graphs/
+          cp .build/docc/symbol-graphs/AnalyticsFirebase@*.symbols.json .build/docc/module-symbol-graphs/ 2>/dev/null || true
+          # The fallback names match what the plugin passes, so the site keeps the same identity.
+          xcrun docc convert \
+            --fallback-display-name AnalyticsFirebase \
+            --fallback-bundle-identifier AnalyticsFirebase \
+            --additional-symbol-graph-dir .build/docc/module-symbol-graphs \
             --transform-for-static-hosting \
             --hosting-base-path swift-analytics-firebase \
             --output-path ./docs

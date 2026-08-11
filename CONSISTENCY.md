@@ -2,21 +2,27 @@
 
 ファミリー様式規約に従っていない箇所を、理由付きで宣言する。
 
-## DocC のワークフローを置いていない
+## `docc.yml` が Swift-DocC プラグインを使わない
 
-標準は `tests.yml` + `release-on-tag.yml` + `docc.yml` の 3 本だが、このリポジトリは
-**`docc.yml` を持たない**。
+**条項**: 標準ワークフローの `docc.yml` は `swift package generate-documentation` でドキュメントを作る。
 
-`swift-symbolgraph-extract` が macOS で `AnalyticsFirebase` を読めずに落ちるため
-（`missing required module 'FirebaseAnalytics'`）。Firebase Analytics は xcframework で配られ、
-**macOS 向けのモジュールが symbolgraph の抽出に必要な形で出てこない**。
-これはこちらのコードの問題ではなく、依存の配布形態の問題で、こちらでは直せない。
+**逸脱内容**: このリポジトリの `docc.yml` は、ビルド中に `-emit-symbol-graph` でシンボルグラフを書き出し、
+`docc convert` を直接呼ぶ。プラグインは通らない。
 
-落ち続けるワークフローを置くほうが害が大きい —— 赤いのが常態になると、
-本当に壊れたときに区別できなくなる。
+**理由**: プラグインはシンボル抽出を `swift-symbolgraph-extract` に任せるが、
+**SwiftPM はその起動コマンドにバイナリ xcframework 依存のフレームワーク検索パスを入れない。**
+FirebaseAnalytics は xcframework で配られ、スライスの場所は
+`-I …/FirebaseAnalytics.xcframework/macos-arm64_x86_64` として渡される。
+しかし中身は `framework module FirebaseAnalytics` であり、Clang はフレームワークモジュールを
+`-F` でしか見つけられない。だから**コンパイルは通るのに抽出だけが落ちる** ——
+コンパイル側には、SwiftPM が framework を複製したビルドディレクトリを指す `-F` が渡っている。
 
-**代わりに README で説明を完結させている。** このパッケージの公開面は 2 つ
-（`FirebaseAnalyticsClient` と `GA4Dialect`）しかなく、doc コメントはソースに書いてある。
-語彙そのものの文書は [swift-analytics](https://no-problem-dev.github.io/swift-analytics/) にある。
+この差は外から埋められない。`-Xswiftc` も `-Xcc` も、ターゲットの `swiftSettings` も、
+`swift-symbolgraph-extract` の引数には届かない（2026-08-11 に3つとも実測）。
+一方 `-emit-symbol-graph` はビルドの中で動くので、検索パスは最初から正しい。
 
-Firebase 側が macOS のモジュールを出せるようになったら、標準の 3 本に戻す。
+出てくるシンボルグラフは、抽出コマンドに手で `-F` を足したときの結果と同一
+（公開シンボル 27・関係 33・precise identifier 完全一致。2026-08-11 実測）。
+
+**Firebase 側の問題ではない。** macOS スライスは正しく配られている。直る場所は SwiftPM で、
+そこが `-F` を渡すようになったら標準の書き方に戻す。

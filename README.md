@@ -74,13 +74,11 @@ FirebaseAnalyticsClient(onViolation: { violation in
 
 ## Documentation
 
+The API reference for this package is at
+[**swift-analytics-firebase**](https://no-problem-dev.github.io/swift-analytics-firebase/documentation/analyticsfirebase).
+
 The vocabulary this package implements — events, values, kinds, and counting rules — is documented
 at [**swift-analytics**](https://no-problem-dev.github.io/swift-analytics/documentation/).
-
-This package publishes no DocC site of its own: `swift-symbolgraph-extract` cannot read
-`AnalyticsFirebase` on macOS, because Firebase Analytics ships as an xcframework whose macOS module
-is not exposed in the form symbol graph extraction needs. The public surface here is two types, and
-both are documented in the source. See [CONSISTENCY.md](CONSISTENCY.md).
 
 ## Installation
 
