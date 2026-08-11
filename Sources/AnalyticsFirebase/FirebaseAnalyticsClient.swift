@@ -72,7 +72,7 @@ public struct FirebaseAnalyticsClient: AnalyticsClient {
     /// long before the build that ships.
     public static let crashInDebug: @Sendable (GA4Dialect.Violation) -> Void = { violation in
         #if DEBUG
-        preconditionFailure("GA4 の制約に反する計測: \(violation.localizedDescription)")
+        preconditionFailure("Analytics payload breaks a GA4 rule: \(violation.localizedDescription)")
         #endif
     }
 

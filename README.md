@@ -2,15 +2,17 @@ English | [日本語](./README.ja.md)
 
 # swift-analytics-firebase
 
-The Firebase Analytics (GA4) destination for [swift-analytics](https://github.com/no-problem-dev/swift-analytics).
+Sends your app's analytics events to Firebase (GA4) and stops the ones GA4 would silently discard, so a metric never goes quietly missing from your dashboard.
 
 ![Swift](https://img.shields.io/badge/Swift-6.2-orange.svg)
 ![Platforms](https://img.shields.io/badge/Platforms-iOS%2017%20%7C%20macOS%2014%20%7C%20tvOS%2017%20%7C%20watchOS%2010%20%7C%20visionOS%201-blue.svg)
 ![License](https://img.shields.io/badge/License-MIT-yellow.svg)
 
-It lives apart from the core because SwiftPM resolves dependencies per package: bundling the adapter
-with the vocabulary would pull the Firebase SDK into every consumer that only uses the vocabulary —
-domain layers, previews, tests. Splitting targets does not split resolution.
+It implements `AnalyticsClient` from
+[swift-analytics](https://github.com/no-problem-dev/swift-analytics), and lives apart from it
+because SwiftPM resolves dependencies per package: bundling the adapter with the vocabulary would
+pull the Firebase SDK into every consumer that only uses the vocabulary — domain layers, previews,
+tests. Splitting targets does not split resolution.
 
 ## Features
 

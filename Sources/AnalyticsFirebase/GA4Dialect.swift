@@ -53,19 +53,19 @@ public enum GA4Dialect {
         public var errorDescription: String? {
             switch self {
             case let .nameTooLong(name, limit):
-                return "\(name) は \(limit) 文字を超えている"
+                return "\(name) is longer than \(limit) characters"
             case let .nameHasInvalidCharacters(name):
-                return "\(name) に使えない文字がある（英数字と _ のみ）"
+                return "\(name) contains something other than ASCII letters, digits and _"
             case let .nameDoesNotStartWithLetter(name):
-                return "\(name) が英字で始まっていない"
-            case let .reservedPrefix(name):
-                return "\(name) は Firebase の予約接頭辞を使っている"
+                return "\(name) does not start with an ASCII letter"
+            case let .reservedPrefix(prefix):
+                return "\(prefix) is a prefix Firebase reserves"
             case let .reservedName(name):
-                return "\(name) は Firebase の予約イベント名"
+                return "\(name) is an event name Firebase reserves"
             case let .tooManyParameters(name, count):
-                return "\(name) のパラメータが \(count) 個ある（上限 25）"
+                return "\(name) carries \(count) parameters (limit \(GA4Dialect.parameterLimit))"
             case let .valueTooLong(key, length):
-                return "\(key) の値が \(length) 文字ある（上限 100）"
+                return "\(key) has a value of \(length) characters (limit \(GA4Dialect.valueLimit))"
             }
         }
     }

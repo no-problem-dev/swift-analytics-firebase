@@ -2,12 +2,13 @@
 
 # swift-analytics-firebase
 
-[swift-analytics](https://github.com/no-problem-dev/swift-analytics) の Firebase Analytics（GA4）送信先。
+アプリの計測イベントを Firebase（GA4）へ送り、GA4 が黙って捨てるものはその手前で止める。ダッシュボードから数字が静かに消えることがなくなる。
 
 ![Swift](https://img.shields.io/badge/Swift-6.2-orange.svg)
 ![Platforms](https://img.shields.io/badge/Platforms-iOS%2017%20%7C%20macOS%2014%20%7C%20tvOS%2017%20%7C%20watchOS%2010%20%7C%20visionOS%201-blue.svg)
 ![License](https://img.shields.io/badge/License-MIT-yellow.svg)
 
+[swift-analytics](https://github.com/no-problem-dev/swift-analytics) の `AnalyticsClient` の実装です。
 本体から切り離してあるのは、SwiftPM が依存をパッケージ単位で解決するからです。
 アダプタを本体に同居させると、語彙しか使わない消費者（ドメイン層・プレビュー・テスト）にも
 Firebase の SDK が降ってきます。ターゲットを分けても解決は分けられません。
