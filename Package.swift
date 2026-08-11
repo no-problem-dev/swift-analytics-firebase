@@ -21,7 +21,7 @@ let package = Package(
         .library(name: "AnalyticsFirebase", targets: ["AnalyticsFirebase"])
     ],
     dependencies: [
-        .package(url: "https://github.com/no-problem-dev/swift-analytics.git", from: "0.1.0"),
+        .package(url: "https://github.com/no-problem-dev/swift-analytics.git", .upToNextMinor(from: "0.1.0")),
         // **Do not add `FirebaseAnalyticsIdentitySupport`.** In firebase-ios-sdk 12.x,
         // `FirebaseAnalytics` does not collect IDFA by default; adding Identity is what turns it on.
         // Its absence is therefore the specification, and must survive any tidying of dependencies.
