@@ -81,7 +81,7 @@ macOS 向けのモジュールが symbolgraph 抽出に必要な形で出てこ�
 ## 導入
 
 ```swift
-.package(url: "https://github.com/no-problem-dev/swift-analytics-firebase.git", from: "0.1.0")
+.package(url: "https://github.com/no-problem-dev/swift-analytics-firebase.git", .upToNextMinor(from: "0.1.0"))
 ```
 
 `firebase-ios-sdk` と、それ経由で `swift-analytics` が入ります。`AnalyticsFirebase` プロダクトは

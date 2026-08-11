@@ -83,7 +83,7 @@ both are documented in the source. See [CONSISTENCY.md](CONSISTENCY.md).
 ## Installation
 
 ```swift
-.package(url: "https://github.com/no-problem-dev/swift-analytics-firebase.git", from: "0.1.0")
+.package(url: "https://github.com/no-problem-dev/swift-analytics-firebase.git", .upToNextMinor(from: "0.1.0"))
 ```
 
 The package brings in `firebase-ios-sdk` and, through it, `swift-analytics`. Add the
