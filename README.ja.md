@@ -72,10 +72,10 @@ FirebaseAnalyticsClient(onViolation: { violation in
 ## ドキュメント
 
 このパッケージの API リファレンスは
-[**swift-analytics-firebase**](https://no-problem-dev.github.io/swift-analytics-firebase/documentation/analyticsfirebase) にあります。
+[`Sources/AnalyticsFirebase`](Sources/AnalyticsFirebase) の `///` コメントにあります。
 
 このパッケージが実装している語彙（出来事・値・種別・数え方）の文書は
-[**swift-analytics**](https://no-problem-dev.github.io/swift-analytics/documentation/) にあります。
+[**swift-analytics**](https://github.com/no-problem-dev/swift-analytics/tree/main/Sources/AnalyticsCore/AnalyticsCore.docc) の DocC カタログにあります。
 
 ## 導入
 
