@@ -74,11 +74,11 @@ FirebaseAnalyticsClient(onViolation: { violation in
 
 ## Documentation
 
-The API reference for this package is at
-[**swift-analytics-firebase**](https://no-problem-dev.github.io/swift-analytics-firebase/documentation/analyticsfirebase).
+The API reference for this package is the `///` comments in
+[`Sources/AnalyticsFirebase`](Sources/AnalyticsFirebase).
 
 The vocabulary this package implements — events, values, kinds, and counting rules — is documented
-at [**swift-analytics**](https://no-problem-dev.github.io/swift-analytics/documentation/).
+in the DocC catalog of [**swift-analytics**](https://github.com/no-problem-dev/swift-analytics/tree/main/Sources/AnalyticsCore/AnalyticsCore.docc).
 
 ## Installation
 
