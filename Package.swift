@@ -26,7 +26,6 @@ let package = Package(
         // `FirebaseAnalytics` does not collect IDFA by default; adding Identity is what turns it on.
         // Its absence is therefore the specification, and must survive any tidying of dependencies.
         .package(url: "https://github.com/firebase/firebase-ios-sdk.git", from: "12.0.0"),
-        .package(url: "https://github.com/swiftlang/swift-docc-plugin", from: "1.4.0")
     ],
     targets: [
         .target(
