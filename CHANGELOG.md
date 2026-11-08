@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-11-08
+
 ### Fixed
 
 - The DocC site is published again. It had never built: the Swift-DocC plugin extracts symbols with
@@ -13,6 +15,7 @@
 
 ### Changed
 
+- swift-docc-plugin への依存を外した（DocC は Xcode で開く）
 - `FirebaseAnalyticsClient`'s documentation refers to `DedupingAnalytics` as plain code rather than
   a symbol link. It lives in another module, so the link never resolved.
 
